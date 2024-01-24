@@ -8,7 +8,9 @@ export default class ContextManager {
 
   async create(req: Request, res: Response) {
     try {
-      const { name, type, miasto } = req.body;
+      const name: string = req.body.name;
+      const type: string = req.body.type;
+      const miasto: string = req.body.miasto;
 
       if (name === "" || type === "" || miasto === "") {
         return res.status(400).send({ message: "Bad request." });
@@ -20,24 +22,25 @@ export default class ContextManager {
         return res.status(409).send({ message: `${name} already exists.`, result: exists });
       }
 
-      await client.hSet(name, ["type", type, "miasto", miasto, "score", 0, "votes", 0]);
+      await client.hSet(name, {"type": type, "miasto": miasto, "score": "0", "votes": "0"});
       return res.status(201).send({ message: `Successfully added ${name}.`});
     }
     catch (error: unknown) {
       console.error(error);
-      return res.status(500).send({ message: "Internal server error." });
+      return res.status(500).send({ message: "Internal server error.", error: error });
     }
   }
 
   async updateScore(req: Request, res: Response) {
     try {
-      const { name, newScore } = req.body;
+      const name: string = req.body.name;
+      const newScore: number = req.body.name
 
-      if (name === "" || newScore === "") {
+      if (name === "" || isNaN(newScore) || (newScore < 1 || newScore > 10)) {
         return res.status(400).send({message: "Bad request."});
       }
 
-      const university = await client.hGetAll(name);
+      const university = await client.hGetAll(String(name));
       if (!university) {
         return res.status(404).send({message: `${name} not found.`});
       }
@@ -46,18 +49,18 @@ export default class ContextManager {
       const currentCount = parseInt(university.votes || '0');
       const updatedScore = (currentScore * currentCount + newScore) / (currentCount + 1);
 
-      await client.hSet(name, ["score", updatedScore.toString(), "votes", (currentCount + 1).toString()]);
+      await client.hSet(name, {"score": updatedScore.toString(), "votes": (currentCount + 1).toString()});
       return res.status(200).send({message: `${name} updated successfully.`, score: updatedScore});
     }
     catch (error: unknown) {
       console.error(error);
-      return res.status(500).send({message: "Internal server error."});
+      return res.status(500).send({message: "Internal server error.", error: error});
     }
   }
 
   async delete(req: Request, res: Response) {
     try {
-      const { name } = req.body;
+      const name: string = req.params.name;
 
       if (name === "") {
         return res.status(400).send({ message: "Bad request." });
@@ -73,7 +76,7 @@ export default class ContextManager {
     }
     catch (error: unknown) {
       console.error(error);
-      return res.status(500).send({ message: "Internal server error." });
+      return res.status(500).send({ message: "Internal server error.", error: error });
     }
   }
 
@@ -93,7 +96,7 @@ export default class ContextManager {
     }
     catch (error: unknown) {
       console.error(error);
-      return res.status(500).send({ message: "Internal server error." });
+      return res.status(500).send({ message: "Internal server error.", error: error });
     }
   }
 }

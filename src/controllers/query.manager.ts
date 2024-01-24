@@ -10,7 +10,7 @@ export default class QueryManager {
         return res.status(400).send({ message: "Bad request." });
       }
 
-      const university = await client.hGetAll(name as string);
+      const university = await client.hGetAll(String(name));
       if (!university) {
         return res.status(404).send({ message: `${name} not found.` });
       }
