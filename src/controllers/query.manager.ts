@@ -15,7 +15,8 @@ export default class QueryManager {
         return res.status(404).send({ message: `${name} not found.` });
       }
 
-      return res.status(200).send({ message: `${name} retrieved successfully.`, university });
+      let singleUni = {name: name, ...university};
+      return res.status(200).send({ message: `${name} retrieved successfully.`, singleUni });
     }
     catch (error: unknown) {
       console.error(error);
@@ -43,7 +44,8 @@ export default class QueryManager {
 
   async queryByScore(req: Request, res: Response) {
     try {
-      const { min, max } = req.params;
+      const min = parseFloat(req.query.min as string);
+      const max = parseFloat(req.query.max as string);
 
       if (min === undefined && max === undefined) {
         return res.status(400).send({ message: "Bad request.", reason: "min and max are undefined." });
@@ -53,22 +55,10 @@ export default class QueryManager {
       const result = [];
 
       for (let university of universities) {
-        const data = await client.hmGet(university, 'score');
-        if (data[0] !== undefined && !isNaN(Number(data[0]))) {
-          let score = parseFloat(data[0] || '0');
-          if (min === undefined) {
-            if (score === parseFloat(max as string)) {
-              result.push({name: university, ...data});
-            }
-          } else if (max === undefined) {
-            if (score === parseFloat(min as string)) {
-              result.push({name: university, ...data});
-            }
-          } else {
-            if (score >= parseFloat(min as string) && score <= parseFloat(max as string)) {
-              result.push({name: university, ...data});
-            }
-          }
+        const data = await client.hGetAll(university);
+        if (data && data.score !== undefined) {
+          let scoreNum = parseFloat(data.score);
+          if (scoreNum >= min && scoreNum <= max) result.push({name: university, ...data});
         }
       }
 

@@ -11,9 +11,9 @@ class universityQueryManagerRoutes implements IRoutes {
   }
 
   initRoutes() {
+    this.router.get('/score/', this.controller.queryByScore);
     this.router.get('/:name', this.controller.querySingle);
     this.router.get('/', this.controller.queryAll);
-    this.router.get('/score?min&max', this.controller.queryByScore);
   }
 }
 

@@ -34,7 +34,7 @@ export default class ContextManager {
   async updateScore(req: Request, res: Response) {
     try {
       const name: string = req.body.name;
-      const newScore: number = req.body.name
+      const newScore: number = req.body.newScore;
 
       if (name === "" || isNaN(newScore) || (newScore < 1 || newScore > 10)) {
         return res.status(400).send({message: "Bad request."});
